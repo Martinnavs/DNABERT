@@ -132,7 +132,7 @@ logger = logging.getLogger(__name__)  # pylint: disable=invalid-name
 
 
 if is_sklearn_available():
-    from .data import xnli_compute_metrics
+    from .data import glue_compute_metrics, xnli_compute_metrics
 
 
 # Modeling
