@@ -66,14 +66,10 @@ from transformers import (
     XLNetTokenizer,
     get_linear_schedule_with_warmup,
 )
-from transformers import glue_compute_metrics as compute_metrics
 from transformers import glue_convert_examples_to_features as convert_examples_to_features
 from transformers import glue_output_modes as output_modes
 from transformers import glue_processors as processors
-
-
-import transformers
-print(dir(transformers))
+from transformers import glue_compute_metrics as compute_metrics
 
 
 try:
@@ -114,8 +110,9 @@ MODEL_CLASSES = {
     "xlmroberta": (XLMRobertaConfig, XLMRobertaForSequenceClassification, XLMRobertaTokenizer),
     "flaubert": (FlaubertConfig, FlaubertForSequenceClassification, FlaubertTokenizer),
 }
-                    
-TOKEN_ID_GROUP = ["bert", "dnalong", "dnalongcat", "xlnet", "albert"] 
+
+TOKEN_ID_GROUP = ["bert", "dnalong", "dnalongcat", "xlnet", "albert"]
+
 
 def set_seed(args):
     random.seed(args.seed)
@@ -160,6 +157,7 @@ def _rotate_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -
         logger.info("Deleting older checkpoint [{}] due to args.save_total_limit".format(checkpoint))
         shutil.rmtree(checkpoint)
 
+
 def train(args, train_dataset, model, tokenizer):
     """ Train the model """
     if args.local_rank in [-1, 0]:
@@ -185,9 +183,9 @@ def train(args, train_dataset, model, tokenizer):
         {"params": [p for n, p in model.named_parameters() if any(nd in n for nd in no_decay)], "weight_decay": 0.0},
     ]
 
-    warmup_steps = args.warmup_steps if args.warmup_percent == 0 else int(args.warmup_percent*t_total)
+    warmup_steps = args.warmup_steps if args.warmup_percent == 0 else int(args.warmup_percent * t_total)
 
-    optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon, betas=(args.beta1,args.beta2))
+    optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate, eps=args.adam_epsilon, betas=(args.beta1, args.beta2))
     scheduler = get_linear_schedule_with_warmup(
         optimizer, num_warmup_steps=warmup_steps, num_training_steps=t_total
     )
@@ -309,7 +307,6 @@ def train(args, train_dataset, model, tokenizer):
                     ):  # Only evaluate when single GPU otherwise metrics may not average well
                         results = evaluate(args, model, tokenizer)
 
-
                         if args.task_name == "dna690":
                             # record the best auc
                             if results["auc"] > best_auc:
@@ -323,11 +320,10 @@ def train(args, train_dataset, model, tokenizer):
                                 stop_count = 0
 
                             last_auc = results["auc"]
-                            
+
                             if stop_count == args.early_stop:
                                 logger.info("Early stop")
                                 return global_step, tr_loss / global_step
-
 
                         for key, value in results.items():
                             eval_key = "eval_{}".format(key)
@@ -386,7 +382,6 @@ def evaluate(args, model, tokenizer, prefix="", evaluate=True):
     eval_outputs_dirs = (args.output_dir, args.output_dir + "-MM") if args.task_name == "mnli" else (args.output_dir,)
     if args.task_name[:3] == "dna":
         softmax = torch.nn.Softmax(dim=1)
-        
 
     results = {}
     for eval_task, eval_output_dir in zip(eval_task_names, eval_outputs_dirs):
@@ -441,21 +436,21 @@ def evaluate(args, model, tokenizer, prefix="", evaluate=True):
                 if args.do_ensemble_pred:
                     probs = softmax(torch.tensor(preds, dtype=torch.float32)).numpy()
                 else:
-                    probs = softmax(torch.tensor(preds, dtype=torch.float32))[:,1].numpy()
+                    probs = softmax(torch.tensor(preds, dtype=torch.float32))[:, 1].numpy()
             elif args.task_name == "dnasplice":
                 probs = softmax(torch.tensor(preds, dtype=torch.float32)).numpy()
             preds = np.argmax(preds, axis=1)
         elif args.output_mode == "regression":
             preds = np.squeeze(preds)
         if args.do_ensemble_pred:
-            result = compute_metrics(eval_task, preds, out_label_ids, probs[:,1])
+            result = compute_metrics(eval_task, preds, out_label_ids, probs[:, 1])
         else:
             result = compute_metrics(eval_task, preds, out_label_ids, probs)
         results.update(result)
-        
+
         if args.task_name == "dna690":
             eval_output_dir = args.result_dir
-            if not os.path.exists(args.result_dir): 
+            if not os.path.exists(args.result_dir):
                 os.makedirs(args.result_dir)
         output_eval_file = os.path.join(eval_output_dir, prefix, "eval_results.txt")
         with open(output_eval_file, "a") as writer:
@@ -475,7 +470,6 @@ def evaluate(args, model, tokenizer, prefix="", evaluate=True):
         return results, eval_task, preds, out_label_ids, probs
     else:
         return results
-
 
 
 def predict(args, model, tokenizer, prefix=""):
@@ -535,7 +529,7 @@ def predict(args, model, tokenizer, prefix=""):
                 if args.do_ensemble_pred:
                     probs = softmax(torch.tensor(preds, dtype=torch.float32)).numpy()
                 else:
-                    probs = softmax(torch.tensor(preds, dtype=torch.float32))[:,1].numpy()
+                    probs = softmax(torch.tensor(preds, dtype=torch.float32))[:, 1].numpy()
             elif args.task_name == "dnasplice":
                 probs = softmax(torch.tensor(preds, dtype=torch.float32)).numpy()
             preds = np.argmax(preds, axis=1)
@@ -543,13 +537,13 @@ def predict(args, model, tokenizer, prefix=""):
             preds = np.squeeze(preds)
 
         if args.do_ensemble_pred:
-            result = compute_metrics(pred_task, preds, out_label_ids, probs[:,1])
+            result = compute_metrics(pred_task, preds, out_label_ids, probs[:, 1])
         else:
             result = compute_metrics(pred_task, preds, out_label_ids, probs)
-        
+
         pred_output_dir = args.predict_dir
         if not os.path.exists(pred_output_dir):
-               os.makedir(pred_output_dir)
+            os.makedir(pred_output_dir)
         output_pred_file = os.path.join(pred_output_dir, "pred_results.npy")
         logger.info("***** Pred results {} *****".format(prefix))
         for key in sorted(result.keys()):
@@ -576,7 +570,6 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
     if not os.path.exists(args.predict_dir):
         os.makedirs(args.predict_dir)
     softmax = torch.nn.Softmax(dim=1)
-    
 
     for pred_task, pred_output_dir in zip(pred_task_names, pred_outputs_dirs):
         '''
@@ -585,8 +578,7 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
         else:
             args.data_dir = deepcopy(args.visualize_data_dir).replace("/690", "/690/" + str(kmer))
         '''
-            
-            
+
         evaluate = False if args.visualize_train else True
         pred_dataset = load_and_cache_examples(args, pred_task, tokenizer, evaluate=evaluate)
 
@@ -610,11 +602,11 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
         nb_pred_steps = 0
         batch_size = args.pred_batch_size
         if args.task_name != "dnasplice":
-            preds = np.zeros([len(pred_dataset),2])
+            preds = np.zeros([len(pred_dataset), 2])
         else:
-            preds = np.zeros([len(pred_dataset),3])
+            preds = np.zeros([len(pred_dataset), 3])
         attention_scores = np.zeros([len(pred_dataset), 12, args.max_seq_length, args.max_seq_length])
-        
+
         for index, batch in enumerate(tqdm(pred_dataloader, desc="Predicting")):
             model.eval()
             batch = tuple(t.to(args.device) for t in batch)
@@ -629,9 +621,8 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
                 attention = outputs[-1][-1]
                 _, logits = outputs[:2]
 
-                
-                preds[index*batch_size:index*batch_size+len(batch[0]),:] = logits.detach().cpu().numpy()
-                attention_scores[index*batch_size:index*batch_size+len(batch[0]),:,:,:] = attention.cpu().numpy()
+                preds[index * batch_size:index * batch_size + len(batch[0]), :] = logits.detach().cpu().numpy()
+                attention_scores[index * batch_size:index * batch_size + len(batch[0]), :, :, :] = attention.cpu().numpy()
                 # if preds is None:
                 #     preds = logits.detach().cpu().numpy()
                 # else:
@@ -641,9 +632,9 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
                 #     attention_scores = np.concatenate((attention_scores, attention.cpu().numpy()), 0)
                 # else:
                 #     attention_scores = attention.cpu().numpy()
-        
+
         if args.task_name != "dnasplice":
-            probs = softmax(torch.tensor(preds, dtype=torch.float32))[:,1].numpy()
+            probs = softmax(torch.tensor(preds, dtype=torch.float32))[:, 1].numpy()
         else:
             probs = softmax(torch.tensor(preds, dtype=torch.float32)).numpy()
 
@@ -651,34 +642,31 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
 
         for index, attention_score in enumerate(attention_scores):
             attn_score = []
-            for i in range(1, attention_score.shape[-1]-kmer+2):
-                attn_score.append(float(attention_score[:,0,i].sum()))
+            for i in range(1, attention_score.shape[-1] - kmer + 2):
+                attn_score.append(float(attention_score[:, 0, i].sum()))
 
-            for i in range(len(attn_score)-1):
-                if attn_score[i+1] == 0:
+            for i in range(len(attn_score) - 1):
+                if attn_score[i + 1] == 0:
                     attn_score[i] = 0
                     break
 
-            # attn_score[0] = 0    
-            counts = np.zeros([len(attn_score)+kmer-1])
-            real_scores = np.zeros([len(attn_score)+kmer-1])
+            # attn_score[0] = 0
+            counts = np.zeros([len(attn_score) + kmer - 1])
+            real_scores = np.zeros([len(attn_score) + kmer - 1])
             for i, score in enumerate(attn_score):
                 for j in range(kmer):
-                    counts[i+j] += 1.0
-                    real_scores[i+j] += score
+                    counts[i + j] += 1.0
+                    real_scores[i + j] += score
             real_scores = real_scores / counts
             real_scores = real_scores / np.linalg.norm(real_scores)
-            
-        
+
             # print(index)
             # print(real_scores)
             # print(len(real_scores))
 
             scores[index] = real_scores
-        
 
     return scores, probs
-
 
 
 def load_and_cache_examples(args, task, tokenizer, evaluate=False):
@@ -699,13 +687,13 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
     )
     if args.do_predict:
         cached_features_file = os.path.join(
-        args.data_dir,
-        "cached_{}_{}_{}".format(
-            "dev" if evaluate else "train",
-            str(args.max_seq_length),
-            str(task),
-        ),
-    )
+            args.data_dir,
+            "cached_{}_{}_{}".format(
+                "dev" if evaluate else "train",
+                str(args.max_seq_length),
+                str(task),
+            ),
+        )
     if os.path.exists(cached_features_file) and not args.overwrite_cache:
         logger.info("Loading features from cached file %s", cached_features_file)
         features = torch.load(cached_features_file)
@@ -717,9 +705,8 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
             label_list[1], label_list[2] = label_list[2], label_list[1]
         examples = (
             processor.get_dev_examples(args.data_dir) if evaluate else processor.get_train_examples(args.data_dir)
-        )   
+        )
 
-        
         print("finish loading examples")
 
         # params for convert_examples_to_features
@@ -728,45 +715,43 @@ def load_and_cache_examples(args, task, tokenizer, evaluate=False):
         pad_token = tokenizer.convert_tokens_to_ids([tokenizer.pad_token])[0]
         pad_token_segment_id = 4 if args.model_type in ["xlnet"] else 0
 
-
         if args.n_process == 1:
             features = convert_examples_to_features(
-            examples,
-            tokenizer,
-            label_list=label_list,
-            max_length=max_length,
-            output_mode=output_mode,
-            pad_on_left=pad_on_left,  # pad on the left for xlnet
-            pad_token=pad_token,
-            pad_token_segment_id=pad_token_segment_id,)
-                
+                examples,
+                tokenizer,
+                label_list=label_list,
+                max_length=max_length,
+                output_mode=output_mode,
+                pad_on_left=pad_on_left,  # pad on the left for xlnet
+                pad_token=pad_token,
+                pad_token_segment_id=pad_token_segment_id,)
+
         else:
             n_proc = int(args.n_process)
             if evaluate:
-                n_proc = max(int(n_proc/4),1)
+                n_proc = max(int(n_proc / 4), 1)
             print("number of processes for converting feature: " + str(n_proc))
             p = Pool(n_proc)
             indexes = [0]
-            len_slice = int(len(examples)/n_proc)
-            for i in range(1, n_proc+1):
+            len_slice = int(len(examples) / n_proc)
+            for i in range(1, n_proc + 1):
                 if i != n_proc:
-                    indexes.append(len_slice*(i))
+                    indexes.append(len_slice * (i))
                 else:
                     indexes.append(len(examples))
-           
+
             results = []
-            
+
             for i in range(n_proc):
-                results.append(p.apply_async(convert_examples_to_features, args=(examples[indexes[i]:indexes[i+1]], tokenizer, max_length, None, label_list, output_mode, pad_on_left, pad_token, pad_token_segment_id, True,  )))
-                print(str(i+1) + ' processor started !')
-            
+                results.append(p.apply_async(convert_examples_to_features, args=(examples[indexes[i]:indexes[i + 1]], tokenizer, max_length, None, label_list, output_mode, pad_on_left, pad_token, pad_token_segment_id, True,)))
+                print(str(i + 1) + ' processor started !')
+
             p.close()
             p.join()
 
             features = []
             for result in results:
                 features.extend(result.get())
-                    
 
         if args.local_rank in [-1, 0]:
             logger.info("Saving features into cached file %s", cached_features_file)
@@ -836,8 +821,7 @@ def main():
         required=True,
         help="The output directory where the model predictions and checkpoints will be written.",
     )
-    
-    
+
     # Other parameters
     parser.add_argument(
         "--visualize_data_dir",
@@ -966,7 +950,6 @@ def main():
     )
     parser.add_argument("--seed", type=int, default=42, help="random seed for initialization")
 
-
     parser.add_argument(
         "--fp16",
         action="store_true",
@@ -982,7 +965,6 @@ def main():
     parser.add_argument("--local_rank", type=int, default=-1, help="For distributed training: local_rank")
     parser.add_argument("--server_ip", type=str, default="", help="For distant debugging.")
     parser.add_argument("--server_port", type=str, default="", help="For distant debugging.")
-
 
     args = parser.parse_args()
     print("ARGS ARE " + str(args))
@@ -1056,7 +1038,7 @@ def main():
     # Load pretrained model and tokenizer
     if args.local_rank not in [-1, 0]:
         torch.distributed.barrier()  # Make sure only the first process in distributed training will download model & vocab
-    
+
     args.model_type = args.model_type.lower()
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
@@ -1067,12 +1049,12 @@ def main():
             finetuning_task=args.task_name,
             cache_dir=args.cache_dir if args.cache_dir else None,
         )
-        
+
         config.hidden_dropout_prob = args.hidden_dropout_prob
         config.attention_probs_dropout_prob = args.attention_probs_dropout_prob
         if args.model_type in ["dnalong", "dnalongcat"]:
             assert args.max_seq_length % 512 == 0
-        config.split = int(args.max_seq_length/512)
+        config.split = int(args.max_seq_length / 512)
         config.rnn = args.rnn
         config.num_rnn_layer = args.num_rnn_layer
         config.rnn_dropout = args.rnn_dropout
@@ -1161,7 +1143,7 @@ def main():
 
     # Visualize
     if args.do_visualize and args.local_rank in [-1, 0]:
-        visualization_models = [3,4,5,6] if not args.visualize_models else [args.visualize_models]
+        visualization_models = [3, 4, 5, 6] if not args.visualize_models else [args.visualize_models]
 
         scores = None
         all_probs = None
@@ -1170,9 +1152,9 @@ def main():
             output_dir = args.output_dir.replace("/690", "/690/" + str(kmer))
             #checkpoint_name = os.listdir(output_dir)[0]
             #output_dir = os.path.join(output_dir, checkpoint_name)
-            
+
             tokenizer = tokenizer_class.from_pretrained(
-                "dna"+str(kmer),
+                "dna" + str(kmer),
                 do_lower_case=args.do_lower_case,
                 cache_dir=args.cache_dir if args.cache_dir else None,
             )
@@ -1201,17 +1183,17 @@ def main():
                 all_probs = deepcopy(probs)
                 scores = deepcopy(attention_scores)
 
-        all_probs = all_probs/float(len(visualization_models))
+        all_probs = all_probs / float(len(visualization_models))
         np.save(os.path.join(args.predict_dir, "atten.npy"), scores)
         np.save(os.path.join(args.predict_dir, "pred_results.npy"), all_probs)
 
     # ensemble prediction
     if args.do_ensemble_pred and args.local_rank in [-1, 0]:
 
-        for kmer in range(3,7):
+        for kmer in range(3, 7):
             output_dir = os.path.join(args.output_dir, str(kmer))
             tokenizer = tokenizer_class.from_pretrained(
-                "dna"+str(kmer),
+                "dna" + str(kmer),
                 do_lower_case=args.do_lower_case,
                 cache_dir=args.cache_dir if args.cache_dir else None,
             )
@@ -1235,7 +1217,7 @@ def main():
             if kmer == 3:
                 args.data_dir = os.path.join(args.data_dir, str(kmer))
             else:
-                args.data_dir = args.data_dir.replace("/"+str(kmer-1), "/"+str(kmer))
+                args.data_dir = args.data_dir.replace("/" + str(kmer - 1), "/" + str(kmer))
 
             if args.result_dir.split('/')[-1] == "test.npy":
                 results, eval_task, _, out_label_ids, probs = evaluate(args, model, tokenizer, prefix=prefix)
@@ -1251,17 +1233,16 @@ def main():
                 all_probs += probs
                 cat_probs = np.concatenate((cat_probs, probs), axis=1)
             print(cat_probs[0])
-        
 
         all_probs = all_probs / 4.0
         all_preds = np.argmax(all_probs, axis=1)
-        
+
         # save label and data for stuck ensemble
         labels = np.array(out_label_ids)
-        labels = labels.reshape(labels.shape[0],1)
+        labels = labels.reshape(labels.shape[0], 1)
         data = np.concatenate((cat_probs, labels), axis=1)
         random.shuffle(data)
-        root_path = args.result_dir.replace(args.result_dir.split('/')[-1],'')
+        root_path = args.result_dir.replace(args.result_dir.split('/')[-1], '')
         if not os.path.exists(root_path):
             os.makedirs(root_path)
         # data_path = os.path.join(root_path, "data")
@@ -1273,14 +1254,10 @@ def main():
         # np.save(os.path.join(data_path, args.result_dir.split('/')[-1]), data)
         # np.save(os.path.join(pred_path, "pred_results.npy", all_probs[:,1]))
         np.save(args.result_dir, data)
-        ensemble_results = compute_metrics(eval_task, all_preds, out_label_ids, all_probs[:,1])
+        ensemble_results = compute_metrics(eval_task, all_preds, out_label_ids, all_probs[:, 1])
         logger.info("***** Ensemble results {} *****".format(prefix))
         for key in sorted(ensemble_results.keys()):
-            logger.info("  %s = %s", key, str(ensemble_results[key]))    
-
-
-            
-
+            logger.info("  %s = %s", key, str(ensemble_results[key]))
 
     return results
 
