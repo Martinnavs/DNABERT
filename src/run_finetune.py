@@ -72,6 +72,10 @@ from transformers import glue_output_modes as output_modes
 from transformers import glue_processors as processors
 
 
+import transformers
+print(dir(transformers))
+
+
 try:
     from torch.utils.tensorboard import SummaryWriter
 except ImportError:
@@ -981,6 +985,7 @@ def main():
 
 
     args = parser.parse_args()
+    print("ARGS ARE " + str(args))
 
     if args.should_continue:
         sorted_checkpoints = _sorted_checkpoints(args)
