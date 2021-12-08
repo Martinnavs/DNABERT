@@ -69,7 +69,124 @@ from transformers import (
 from transformers import glue_convert_examples_to_features as convert_examples_to_features
 from transformers import glue_output_modes as output_modes
 from transformers import glue_processors as processors
-from transformers import glue_compute_metrics as compute_metrics
+
+from scipy.stats import pearsonr, spearmanr
+import numpy as np
+from sklearn.metrics import matthews_corrcoef, precision_score, recall_score, f1_score, roc_auc_score, average_precision_score
+
+
+def simple_accuracy(preds, labels):
+    return (preds == labels).mean()
+
+
+def acc_and_f1(preds, labels):
+    acc = simple_accuracy(preds, labels)
+    f1 = f1_score(y_true=labels, y_pred=preds)
+    return {
+        "acc": acc,
+        "f1": f1,
+        "acc_and_f1": (acc + f1) / 2,
+    }
+
+
+def acc_f1_mcc(preds, labels):
+    acc = simple_accuracy(preds, labels)
+    f1 = f1_score(y_true=labels, y_pred=preds)
+    mcc = matthews_corrcoef(labels, preds)
+    return {
+        "acc": acc,
+        "f1": f1,
+        "mcc": mcc
+    }
+
+
+def acc_f1_mcc_auc_aupr_pre_rec(preds, labels, probs):
+    acc = simple_accuracy(preds, labels)
+    precision = precision_score(y_true=labels, y_pred=preds)
+    recall = recall_score(y_true=labels, y_pred=preds)
+    f1 = f1_score(y_true=labels, y_pred=preds)
+    mcc = matthews_corrcoef(labels, preds)
+    auc = roc_auc_score(labels, probs)
+    aupr = average_precision_score(labels, probs)
+    return {
+        "acc": acc,
+        "f1": f1,
+        "mcc": mcc,
+        "auc": auc,
+        "aupr": aupr,
+        "precision": precision,
+        "recall": recall,
+    }
+
+
+def acc_f1_mcc_auc_pre_rec(preds, labels, probs):
+    acc = simple_accuracy(preds, labels)
+    precision = precision_score(y_true=labels, y_pred=preds, average="macro")
+    recall = recall_score(y_true=labels, y_pred=preds, average="macro")
+    f1 = f1_score(y_true=labels, y_pred=preds, average="macro")
+    mcc = matthews_corrcoef(labels, preds)
+    auc = roc_auc_score(labels, probs, average="macro", multi_class="ovo")
+    return {
+        "acc": acc,
+        "f1": f1,
+        "mcc": mcc,
+        "auc": auc,
+        "precision": precision,
+        "recall": recall,
+    }
+
+
+def pearson_and_spearman(preds, labels):
+    pearson_corr = pearsonr(preds, labels)[0]
+    spearman_corr = spearmanr(preds, labels)[0]
+    return {
+        "pearson": pearson_corr,
+        "spearmanr": spearman_corr,
+        "corr": (pearson_corr + spearman_corr) / 2,
+    }
+
+
+def glue_compute_metrics(task_name, preds, labels, probs=None):
+    assert len(preds) == len(labels)
+    if task_name == "cola":
+        return {"mcc": matthews_corrcoef(labels, preds)}
+    elif task_name == "sst-2":
+        return {"acc": simple_accuracy(preds, labels)}
+    elif task_name in ["dna690", "dnapair"]:
+        return acc_f1_mcc_auc_aupr_pre_rec(preds, labels, probs)
+    elif task_name == "dnaprom":
+        return acc_f1_mcc_auc_pre_rec(preds, labels, probs)
+        # return {"acc": simple_accuracy(preds, labels)}
+    elif task_name == "dnasplice":
+        return acc_f1_mcc_auc_pre_rec(preds, labels, probs)
+    elif task_name == "mrpc":
+        return acc_and_f1(preds, labels)
+    elif task_name == "sts-b":
+        return pearson_and_spearman(preds, labels)
+    elif task_name == "qqp":
+        return acc_and_f1(preds, labels)
+    elif task_name == "mnli":
+        return {"acc": simple_accuracy(preds, labels)}
+    elif task_name == "mnli-mm":
+        return {"acc": simple_accuracy(preds, labels)}
+    elif task_name == "qnli":
+        return {"acc": simple_accuracy(preds, labels)}
+    elif task_name == "rte":
+        return {"acc": simple_accuracy(preds, labels)}
+    elif task_name == "wnli":
+        return {"acc": simple_accuracy(preds, labels)}
+    elif task_name == "hans":
+        return {"acc": simple_accuracy(preds, labels)}
+    else:
+        raise KeyError(task_name)
+
+
+def xnli_compute_metrics(task_name, preds, labels):
+    assert len(preds) == len(labels)
+    if task_name == "xnli":
+        return {"acc": simple_accuracy(preds, labels)}
+    else:
+        raise KeyError(task_name)
 
 
 try:
@@ -443,9 +560,9 @@ def evaluate(args, model, tokenizer, prefix="", evaluate=True):
         elif args.output_mode == "regression":
             preds = np.squeeze(preds)
         if args.do_ensemble_pred:
-            result = compute_metrics(eval_task, preds, out_label_ids, probs[:, 1])
+            result = glue_compute_metrics(eval_task, preds, out_label_ids, probs[:, 1])
         else:
-            result = compute_metrics(eval_task, preds, out_label_ids, probs)
+            result = glue_compute_metrics(eval_task, preds, out_label_ids, probs)
         results.update(result)
 
         if args.task_name == "dna690":
@@ -537,9 +654,9 @@ def predict(args, model, tokenizer, prefix=""):
             preds = np.squeeze(preds)
 
         if args.do_ensemble_pred:
-            result = compute_metrics(pred_task, preds, out_label_ids, probs[:, 1])
+            result = glue_compute_metrics(pred_task, preds, out_label_ids, probs[:, 1])
         else:
-            result = compute_metrics(pred_task, preds, out_label_ids, probs)
+            result = glue_compute_metrics(pred_task, preds, out_label_ids, probs)
 
         pred_output_dir = args.predict_dir
         if not os.path.exists(pred_output_dir):
@@ -1254,7 +1371,7 @@ def main():
         # np.save(os.path.join(data_path, args.result_dir.split('/')[-1]), data)
         # np.save(os.path.join(pred_path, "pred_results.npy", all_probs[:,1]))
         np.save(args.result_dir, data)
-        ensemble_results = compute_metrics(eval_task, all_preds, out_label_ids, all_probs[:, 1])
+        ensemble_results = glue_compute_metrics(eval_task, all_preds, out_label_ids, all_probs[:, 1])
         logger.info("***** Ensemble results {} *****".format(prefix))
         for key in sorted(ensemble_results.keys()):
             logger.info("  %s = %s", key, str(ensemble_results[key]))
