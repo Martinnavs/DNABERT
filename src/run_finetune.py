@@ -72,7 +72,7 @@ from transformers import glue_processors as processors
 
 from scipy.stats import pearsonr, spearmanr
 import numpy as np
-from sklearn.metrics import matthews_corrcoef, precision_score, recall_score, f1_score, roc_auc_score, average_precision_score
+from sklearn.metrics import matthews_corrcoef, precision_score, recall_score, f1_score, roc_auc_score, average_precision_score, confusion_matrix 
 
 
 def simple_accuracy(preds, labels):
@@ -120,19 +120,28 @@ def acc_f1_mcc_auc_aupr_pre_rec(preds, labels, probs):
 
 
 def acc_f1_mcc_auc_pre_rec(preds, labels, probs):
-    acc = simple_accuracy(preds, labels)
     precision = precision_score(y_true=labels, y_pred=preds, average="macro")
     recall = recall_score(y_true=labels, y_pred=preds, average="macro")
     f1 = f1_score(y_true=labels, y_pred=preds, average="macro")
     mcc = matthews_corrcoef(labels, preds)
     auc = roc_auc_score(labels, probs, average="macro", multi_class="ovo")
+    CM = confusion_matrix(y_true=labels, y_pred=preds)
+    TN = CM[0][0]
+    FN = CM[1][0]
+    TP = CM[1][1]
+    FP = CM[0][1]
+    acc = (TP+TN)/(TP+TN+FP+FN)
+    # Specificity or true negative rate
+    TNR = TN/(TN+FP)
+
     return {
         "acc": acc,
         "f1": f1,
         "mcc": mcc,
         "auc": auc,
         "precision": precision,
-        "recall": recall,
+        "recall/sensitivity": recall,
+        "specificity" : TNR,
     }
 
 
