@@ -1385,7 +1385,7 @@ def main():
         for key in sorted(ensemble_results.keys()):
             logger.info("  %s = %s", key, str(ensemble_results[key]))
 
-    print(ensemble_results, results)
+    print(results)
     return results
 
 
