@@ -666,7 +666,7 @@ def predict(args, model, tokenizer, prefix=""):
             result = glue_compute_metrics(pred_task, preds, out_label_ids, probs[:, 1])
         else:
             result = glue_compute_metrics(pred_task, preds, out_label_ids, probs)
-
+        print(result)
         pred_output_dir = args.predict_dir
         if not os.path.exists(pred_output_dir):
             os.makedir(pred_output_dir)
@@ -1384,8 +1384,6 @@ def main():
         logger.info("***** Ensemble results {} *****".format(prefix))
         for key in sorted(ensemble_results.keys()):
             logger.info("  %s = %s", key, str(ensemble_results[key]))
-
-    print(results)
     return results
 
 
