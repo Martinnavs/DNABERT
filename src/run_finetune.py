@@ -73,7 +73,12 @@ from transformers import glue_processors as processors
 from scipy.stats import pearsonr, spearmanr
 import numpy as np
 from sklearn.metrics import matthews_corrcoef, precision_score, recall_score, f1_score, roc_auc_score, average_precision_score, confusion_matrix 
+from pycm import *
 
+def get_scores_multiclass(preds, labels):
+	cm = ConfusionMatrix(labels, preds)
+	print(cm)
+	return cm
 
 def simple_accuracy(preds, labels):
     return (preds == labels).mean()
@@ -186,6 +191,8 @@ def glue_compute_metrics(task_name, preds, labels, probs=None):
         return {"acc": simple_accuracy(preds, labels)}
     elif task_name == "hans":
         return {"acc": simple_accuracy(preds, labels)}
+	elif task_name == "5mC":
+		return get_scores_multiclass(preds, labels)
     else:
         raise KeyError(task_name)
 
