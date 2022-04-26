@@ -191,7 +191,7 @@ class DnaPromProcessor(DataProcessor):
             examples.append(InputExample(guid=guid, text_a=text_a, text_b=None, label=label))
         return examples
 
-class 5mCProcessor(DataProcessor):
+class Methyl5mCProcessor(DataProcessor):
     """Processor for the DNA promoter data"""
 
     def get_labels(self):
@@ -650,7 +650,7 @@ glue_processors = {
     "dna690": DnaPromProcessor,
     "dnapair": DnaPairProcessor,
     "dnasplice": DnaSpliceProcessor,
-    "5mc": 5mCProcessor,
+    "5mc": Methyl5mCProcessor,
 }
 
 glue_output_modes = {
