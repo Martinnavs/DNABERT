@@ -191,8 +191,8 @@ def glue_compute_metrics(task_name, preds, labels, probs=None):
         return {"acc": simple_accuracy(preds, labels)}
     elif task_name == "hans":
         return {"acc": simple_accuracy(preds, labels)}
-	elif task_name == "5mC":
-		return get_scores_multiclass(preds, labels)
+    elif task_name == "5mC":
+        return get_scores_multiclass(preds, labels) 
     else:
         raise KeyError(task_name)
 
