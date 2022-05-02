@@ -590,7 +590,7 @@ def evaluate(args, model, tokenizer, prefix="", evaluate=True):
         output_eval_file = os.path.join(eval_output_dir, prefix, "eval_results.txt")
         with open(output_eval_file, "a") as writer:
 
-            if args.task_name[:3] == "dna" or args_task_name == "5mc":
+            if args.task_name[:3] == "dna" or args.task_name == "5mc":
                 eval_result = args.data_dir.split('/')[-1] + " "
             else:
                 eval_result = ""
