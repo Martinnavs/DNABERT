@@ -515,7 +515,7 @@ def evaluate(args, model, tokenizer, prefix="", evaluate=True):
     # Loop to handle MNLI double evaluation (matched, mis-matched)
     eval_task_names = ("mnli", "mnli-mm") if args.task_name == "mnli" else (args.task_name,)
     eval_outputs_dirs = (args.output_dir, args.output_dir + "-MM") if args.task_name == "mnli" else (args.output_dir,)
-    if args.task_name[:3] == "dna":
+    if args.task_name[:3] == "dna" or args.task_name == "5mc":
         softmax = torch.nn.Softmax(dim=1)
 
     results = {}
@@ -590,7 +590,7 @@ def evaluate(args, model, tokenizer, prefix="", evaluate=True):
         output_eval_file = os.path.join(eval_output_dir, prefix, "eval_results.txt")
         with open(output_eval_file, "a") as writer:
 
-            if args.task_name[:3] == "dna":
+            if args.task_name[:3] == "dna" or args_task_name == "5mc":
                 eval_result = args.data_dir.split('/')[-1] + " "
             else:
                 eval_result = ""
