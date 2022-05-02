@@ -469,7 +469,7 @@ def train(args, train_dataset, model, tokenizer):
                     logs["learning_rate"] = learning_rate_scalar
                     logs["loss"] = loss_scalar
                     logging_loss = tr_loss
-
+					print(logs)
                     for key, value in logs.items():
                         tb_writer.add_scalar(key, value, global_step)
                     print(json.dumps({**logs, **{"step": global_step}}))
