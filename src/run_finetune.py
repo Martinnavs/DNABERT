@@ -78,7 +78,9 @@ from pycm import *
 def get_scores_multiclass(preds, labels):
 	cm = ConfusionMatrix(labels, preds)
 	print(cm)
-	return cm
+	return {"Overall_ACC": cm.Overall_ACC, "AUNU": cm.AUNU, "AUNP": cm.AUNP, 
+				"F1_Micro": cm.F1_Micro, "F1_Macro": cm.F1_Macro, "Precision_Macro": cm.PPV_Macro,
+				"Precision_Micro": cm.PPV_Micro, "Sensitivity_Macro": cm.TPR_Macro, "Sensitivity_Micro": cm.TPR_Micro}
 
 def simple_accuracy(preds, labels):
     return (preds == labels).mean()
