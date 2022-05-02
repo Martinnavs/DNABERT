@@ -661,7 +661,7 @@ def predict(args, model, tokenizer, prefix=""):
                 out_label_ids = np.append(out_label_ids, inputs["labels"].detach().cpu().numpy(), axis=0)
 
         if args.output_mode == "classification":
-            if args.task_name[:3] == "dna" and args.task_name != "dnasplice":
+            if (args.task_name[:3] == "dna" and args.task_name != "dnasplice") or args.task_name == "5mc":
                 if args.do_ensemble_pred:
                     probs = softmax(torch.tensor(preds, dtype=torch.float32)).numpy()
                 else:
