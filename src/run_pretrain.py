@@ -150,11 +150,11 @@ class LineByLineTextDataset(Dataset):
         )
 
         if os.path.exists(cached_features_file) and not args.overwrite_cache or "_cached_lm_" in filename:
-			if "_cached_lm_" in filename:		
+            if "_cached_lm_" in filename:		
 				logger.info("Loading features from existing cached file %s", filename)
 	            with open(filename, "rb") as handle:
 		            self.examples = pickle.load(handle)
-			else:
+            else:
 	            logger.info("Loading features from cached file %s", cached_features_file)
 		        with open(cached_features_file, "rb") as handle:
 			        self.examples = pickle.load(handle)
