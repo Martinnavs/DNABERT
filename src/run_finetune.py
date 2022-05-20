@@ -738,7 +738,7 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
         batch_size = args.pred_batch_size
         if args.task_name != "dnasplice":
             preds = np.zeros([len(pred_dataset), 2])
-        elif args.task_name != "5mc":
+        elif args.task_name == "5mc":
             preds = np.zeros([len(pred_dataset), 4])
         else:
             preds = np.zeros([len(pred_dataset), 3])
