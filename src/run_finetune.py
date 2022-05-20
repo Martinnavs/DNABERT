@@ -736,10 +736,11 @@ def visualize(args, model, tokenizer, kmer, prefix=""):
         pred_loss = 0.0
         nb_pred_steps = 0
         batch_size = args.pred_batch_size
-        if args.task_name != "dnasplice":
-            preds = np.zeros([len(pred_dataset), 2])
-        elif args.task_name == "5mc":
+
+        if args.task_name == "5mc":
             preds = np.zeros([len(pred_dataset), 4])
+        elif args.task_name != "dnasplice":
+            preds = np.zeros([len(pred_dataset), 2])
         else:
             preds = np.zeros([len(pred_dataset), 3])
         attention_scores = np.zeros([len(pred_dataset), 12, args.max_seq_length, args.max_seq_length])
