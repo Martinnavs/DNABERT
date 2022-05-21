@@ -86,6 +86,8 @@ def main():
     dev = pd.read_csv(os.path.join(args.data_dir,"dev.tsv"),sep='\t')
     dev.columns = ['sequence','label']
     dev['seq'] = dev['sequence'].apply(utils.kmer2seq)
+    print(dev.head())
+
     dev_pos = dev[(dev['label'] == 1) | (dev['label'] == 2) | (dev['label'] == 3)] # edited based on 5mC
     dev_neg = dev[dev['label'] == 0]
     pos_atten_scores = atten_scores[dev_pos.index.values]
@@ -110,4 +112,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-
+,
