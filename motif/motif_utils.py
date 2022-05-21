@@ -507,6 +507,7 @@ def motif_analysis(pos_seqs,
     
     if verbose:
         print("* Filtering motifs by hypergeometric test")
+        print(motif_seqs)
     motifs_to_keep = filter_motifs(pos_seqs, 
                                    neg_seqs, 
                                    list(motif_seqs.keys()), 
