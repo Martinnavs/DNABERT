@@ -77,7 +77,6 @@ from pycm import *
 
 def get_scores_multiclass(preds, labels):
 	cm = ConfusionMatrix(labels, preds)
-	print(cm)
 	return {"Overall_ACC": cm.Overall_ACC, "AUNU": cm.AUNU, "AUNP": cm.AUNP, 
 				"F1_Micro": cm.F1_Micro, "F1_Macro": cm.F1_Macro, "Precision_Macro": cm.PPV_Macro,
 				"Precision_Micro": cm.PPV_Micro, "Sensitivity_Macro": cm.TPR_Macro, "Sensitivity_Micro": cm.TPR_Micro}
@@ -451,7 +450,7 @@ def train(args, train_dataset, model, tokenizer):
 
                         if args.early_stop != 0:
                             # record current auc to perform early stop
-                            if (args.task_name != "5mc" and results["auc"] < last_auc) or (args.task_name == "5mc" and results["AUNU"] < last_aunu and results["AUNP"] < last_aunp):
+                            if (args.task_name != "5mc" and results["auc"] < last_auc) or (args.task_name == "5mc" and results["eval_AUNU"] < last_aunu and results["eval_AUNP"] < last_aunp):
                                 stop_count += 1
                             else:
                                 stop_count = 0
@@ -459,8 +458,8 @@ def train(args, train_dataset, model, tokenizer):
                             if args.task_name != "5mc":
                                 last_auc = results["auc"]
                             else:
-                                last_aunu = results["AUNU"]
-                                last_aunp = results["AUNP"]
+                                last_aunu = results["eval_AUNU"]
+                                last_aunp = results["eval_AUNP"]
 
                             if stop_count == args.early_stop:
                                 logger.info("Early stop")
