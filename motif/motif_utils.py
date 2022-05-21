@@ -141,6 +141,8 @@ def count_motif_instances(seqs, motifs, allow_multi_match=False):
     from operator import itemgetter
     
     motif_count = {}
+    print("Motifs are")
+    print(motifs)
     
     A = ahocorasick.Automaton()
     for idx, key in enumerate(motifs):
