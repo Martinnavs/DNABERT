@@ -90,11 +90,12 @@ def main():
 
     dev_pos = dev[(dev['label'] == 1) | (dev['label'] == 2) | (dev['label'] == 3)] # edited based on 5mC
     dev_neg = dev[dev['label'] == 0]
+    print(f"Pos: {dev_pos}, Neg: {dev_neg}")
+
     pos_atten_scores = atten_scores[dev_pos.index.values]
     neg_atten_scores = atten_scores[dev_neg.index.values]
     assert len(dev_pos) == len(pos_atten_scores)
 
-    print(f"Pos: {dev_pos}, Neg: {dev_neg}")
     # run motif analysis
     merged_motif_seqs = utils.motif_analysis(dev_pos['seq'],
                                         dev_neg['seq'],
