@@ -83,7 +83,7 @@ def main():
 
     atten_scores = np.load(os.path.join(args.predict_dir,"atten.npy"))
     pred = np.load(os.path.join(args.predict_dir,"pred_results.npy"))
-    dev = pd.read_csv(os.path.join(args.data_dir,"dev.tsv"),sep='\t',header=0)
+    dev = pd.read_csv(os.path.join(args.data_dir,"dev.tsv"),sep='\t')
     dev.columns = ['sequence','label']
     dev['seq'] = dev['sequence'].apply(utils.kmer2seq)
     dev_pos = dev[(dev['label'] == 1) | (dev['label'] == 2) | (dev['label'] == 3)] # edited based on 5mC
@@ -92,6 +92,7 @@ def main():
     neg_atten_scores = atten_scores[dev_neg.index.values]
     assert len(dev_pos) == len(pos_atten_scores)
 
+	print(f"Pos: {dev_pos}, Neg: {dev_neg}")
     # run motif analysis
     merged_motif_seqs = utils.motif_analysis(dev_pos['seq'],
                                         dev_neg['seq'],
