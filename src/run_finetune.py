@@ -451,8 +451,7 @@ def train(args, train_dataset, model, tokenizer):
 
                         if args.early_stop != 0:
                             # record current auc to perform early stop
-                            if (args.task_name != "5mc" and results["auc"] < last_auc)
-                                or (args.task_name == "5mc" and results["AUNU"] < last_aunu and results["AUNP"] < last_aunp):
+                            if (args.task_name != "5mc" and results["auc"] < last_auc) or (args.task_name == "5mc" and results["AUNU"] < last_aunu and results["AUNP"] < last_aunp):
                                 stop_count += 1
                             else:
                                 stop_count = 0
