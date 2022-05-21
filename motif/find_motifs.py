@@ -92,7 +92,7 @@ def main():
     neg_atten_scores = atten_scores[dev_neg.index.values]
     assert len(dev_pos) == len(pos_atten_scores)
 
-	print(f"Pos: {dev_pos}, Neg: {dev_neg}")
+    print(f"Pos: {dev_pos}, Neg: {dev_neg}")
     # run motif analysis
     merged_motif_seqs = utils.motif_analysis(dev_pos['seq'],
                                         dev_neg['seq'],
